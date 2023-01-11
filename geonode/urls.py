@@ -29,6 +29,7 @@ from django.contrib import admin
 from django.conf.urls.i18n import i18n_patterns
 from django.views.i18n import JavaScriptCatalog
 from django.contrib.sitemaps.views import sitemap
+from rest_framework.authtoken import views as rest_views
 
 import geonode.proxy.urls
 from . import views
@@ -170,6 +171,7 @@ urlpatterns += [
     url(r'^api/v2/', include('geonode.api.urls')),
     url(r'^api/v2/', include('geonode.management_commands_http.urls')),
     url(r'^api/v2/api-auth/', include('rest_framework.urls', namespace='geonode_rest_framework')),
+    url(r'^api-token-auth/', rest_views.obtain_auth_token),
     url(r'', include(api.urls)),
 ]
 

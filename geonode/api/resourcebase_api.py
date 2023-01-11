@@ -53,7 +53,7 @@ from geonode.groups.models import GroupProfile
 from geonode.utils import check_ogc_backend
 from geonode.security.utils import get_visible_resources
 from .authentication import OAuthAuthentication
-from .authorization import GeoNodeAuthorization, GeonodeApiKeyAuthentication
+from .authorization import GeoNodeAuthorization, GeonodeApiKeyAuthentication, GeonodeTokenAuthentication
 
 from .api import (
     TagResource,
@@ -662,7 +662,8 @@ class ResourceBaseResource(CommonModelApi):
         excludes = ['csw_anytext', 'metadata_xml']
         authentication = MultiAuthentication(SessionAuthentication(),
                                              OAuthAuthentication(),
-                                             GeonodeApiKeyAuthentication())
+                                             GeonodeApiKeyAuthentication(),
+                                             GeonodeTokenAuthentication())
 
 
 class FeaturedResourceBaseResource(CommonModelApi):
@@ -675,7 +676,8 @@ class FeaturedResourceBaseResource(CommonModelApi):
         resource_name = 'featured'
         authentication = MultiAuthentication(SessionAuthentication(),
                                              OAuthAuthentication(),
-                                             GeonodeApiKeyAuthentication())
+                                             GeonodeApiKeyAuthentication(),
+                                             GeonodeTokenAuthentication())
 
 
 class LayerResource(CommonModelApi):
@@ -832,7 +834,8 @@ class LayerResource(CommonModelApi):
         excludes = ['csw_anytext', 'metadata_xml']
         authentication = MultiAuthentication(SessionAuthentication(),
                                              OAuthAuthentication(),
-                                             GeonodeApiKeyAuthentication())
+                                             GeonodeApiKeyAuthentication(),
+                                             GeonodeTokenAuthentication())
         filtering = CommonMetaApi.filtering
         # Allow filtering using ID
         filtering.update({
@@ -912,7 +915,8 @@ class MapResource(CommonModelApi):
         resource_name = 'maps'
         authentication = MultiAuthentication(SessionAuthentication(),
                                              OAuthAuthentication(),
-                                             GeonodeApiKeyAuthentication())
+                                             GeonodeApiKeyAuthentication(),
+                                             GeonodeTokenAuthentication())
 
 
 class GeoAppResource(CommonModelApi):
@@ -964,7 +968,8 @@ class GeoAppResource(CommonModelApi):
         resource_name = 'geoapps'
         authentication = MultiAuthentication(SessionAuthentication(),
                                              OAuthAuthentication(),
-                                             GeonodeApiKeyAuthentication())
+                                             GeonodeApiKeyAuthentication(),
+                                             GeonodeTokenAuthentication())
 
 
 class DocumentResource(CommonModelApi):
@@ -1023,4 +1028,5 @@ class DocumentResource(CommonModelApi):
         resource_name = 'documents'
         authentication = MultiAuthentication(SessionAuthentication(),
                                              OAuthAuthentication(),
-                                             GeonodeApiKeyAuthentication())
+                                             GeonodeApiKeyAuthentication(),
+                                             GeonodeTokenAuthentication())

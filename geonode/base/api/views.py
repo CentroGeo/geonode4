@@ -79,6 +79,8 @@ from geonode.resource.models import ExecutionRequest
 from geonode.resource.api.tasks import resouce_service_dispatcher
 from geonode.resource.manager import resource_manager
 
+from geonode.api.authorization import GeonodeTokenAuthentication
+
 from guardian.shortcuts import get_objects_for_user
 
 from .permissions import (
@@ -114,7 +116,7 @@ class UserViewSet(DynamicModelViewSet):
     """
     API endpoint that allows users to be viewed or edited.
     """
-    authentication_classes = [SessionAuthentication, BasicAuthentication, OAuth2Authentication]
+    authentication_classes = [SessionAuthentication, BasicAuthentication, GeonodeTokenAuthentication, OAuth2Authentication]
     permission_classes = [IsAuthenticated, IsSelfOrAdminOrReadOnly, ]
     filter_backends = [
         DynamicFilterBackend, DynamicSortingFilter, DynamicSearchFilter
@@ -165,7 +167,7 @@ class GroupViewSet(DynamicModelViewSet):
     """
     API endpoint that allows gropus to be viewed or edited.
     """
-    authentication_classes = [SessionAuthentication, BasicAuthentication, OAuth2Authentication]
+    authentication_classes = [SessionAuthentication, BasicAuthentication, GeonodeTokenAuthentication, OAuth2Authentication]
     permission_classes = [IsAuthenticatedOrReadOnly, IsManagerEditOrAdmin, ]
     filter_backends = [
         DynamicFilterBackend, DynamicSortingFilter, DynamicSearchFilter
@@ -278,7 +280,7 @@ class OwnerViewSet(WithDynamicViewSetMixin, ListModelMixin, RetrieveModelMixin, 
     """
     API endpoint that lists all possible owners.
     """
-    authentication_classes = [SessionAuthentication, BasicAuthentication, OAuth2Authentication]
+    authentication_classes = [SessionAuthentication, BasicAuthentication, GeonodeTokenAuthentication, OAuth2Authentication]
     permission_classes = [AllowAny, ]
     filter_backends = [
         DynamicFilterBackend, DynamicSortingFilter, DynamicSearchFilter
@@ -307,7 +309,7 @@ class ResourceBaseViewSet(DynamicModelViewSet):
     """
     API endpoint that allows base resources to be viewed or edited.
     """
-    authentication_classes = [SessionAuthentication, BasicAuthentication, OAuth2Authentication]
+    authentication_classes = [SessionAuthentication, BasicAuthentication, GeonodeTokenAuthentication, OAuth2Authentication]
     permission_classes = [IsAuthenticatedOrReadOnly, UserHasPerms]
     filter_backends = [
         DynamicFilterBackend, DynamicSortingFilter, DynamicSearchFilter,
