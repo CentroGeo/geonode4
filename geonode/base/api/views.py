@@ -102,7 +102,8 @@ from .serializers import (
     TopicCategorySerializer,
     RegionSerializer,
     ThesaurusKeywordSerializer,
-    ExtraMetadataSerializer
+    ExtraMetadataSerializer,
+    RegistrationSerializer
 )
 from .pagination import GeoNodeApiPagination
 from geonode.base.utils import validate_extra_metadata
@@ -123,6 +124,13 @@ class UserViewSet(DynamicModelViewSet):
     ]
     serializer_class = UserSerializer
     pagination_class = GeoNodeApiPagination
+
+    def create(self, request):
+        serializer = RegistrationSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def get_queryset(self):
         """
