@@ -52,8 +52,7 @@ from geonode.base.bbox_utils import filter_bbox
 from geonode.groups.models import GroupProfile
 from geonode.utils import check_ogc_backend
 from geonode.security.utils import get_visible_resources
-from .authentication import OAuthAuthentication
-from .authorization import GeoNodeAuthorization, GeonodeApiKeyAuthentication
+from .authorization import GeoNodeAuthorization, GeonodeApiKeyAuthentication, GeonodeTokenAuthentication
 
 from .api import (
     TagResource,
@@ -603,7 +602,8 @@ class ResourceBaseResource(CommonModelApi):
         resource_name = "base"
         excludes = ["csw_anytext", "metadata_xml"]
         authentication = MultiAuthentication(
-            SessionAuthentication(), OAuthAuthentication(), GeonodeApiKeyAuthentication()
+            SessionAuthentication(), OAuthAuthentication(), GeonodeApiKeyAuthentication(),
+                                             GeonodeTokenAuthentication())
         )
 
 
@@ -616,7 +616,8 @@ class FeaturedResourceBaseResource(CommonModelApi):
         queryset = ResourceBase.objects.filter(featured=True).order_by("-date")
         resource_name = "featured"
         authentication = MultiAuthentication(
-            SessionAuthentication(), OAuthAuthentication(), GeonodeApiKeyAuthentication()
+            SessionAuthentication(), OAuthAuthentication(), GeonodeApiKeyAuthentication(),
+                                             GeonodeTokenAuthentication())
         )
 
 
@@ -749,7 +750,8 @@ class LayerResource(CommonModelApi):
         allowed_methods = ["get", "patch"]
         excludes = ["csw_anytext", "metadata_xml"]
         authentication = MultiAuthentication(
-            SessionAuthentication(), OAuthAuthentication(), GeonodeApiKeyAuthentication()
+            SessionAuthentication(), OAuthAuthentication(), GeonodeApiKeyAuthentication(),
+                                             GeonodeTokenAuthentication())
         )
         filtering = CommonMetaApi.filtering
         # Allow filtering using ID
@@ -818,7 +820,8 @@ class MapResource(CommonModelApi):
         queryset = Map.objects.distinct().order_by("-date")
         resource_name = "maps"
         authentication = MultiAuthentication(
-            SessionAuthentication(), OAuthAuthentication(), GeonodeApiKeyAuthentication()
+            SessionAuthentication(), OAuthAuthentication(), GeonodeApiKeyAuthentication(),
+                                             GeonodeTokenAuthentication())
         )
 
 
@@ -870,7 +873,8 @@ class GeoAppResource(CommonModelApi):
         queryset = GeoApp.objects.distinct().order_by("-date")
         resource_name = "geoapps"
         authentication = MultiAuthentication(
-            SessionAuthentication(), OAuthAuthentication(), GeonodeApiKeyAuthentication()
+            SessionAuthentication(), OAuthAuthentication(), GeonodeApiKeyAuthentication(),
+                                             GeonodeTokenAuthentication())
         )
 
 
@@ -929,5 +933,6 @@ class DocumentResource(CommonModelApi):
         queryset = Document.objects.distinct().order_by("-date")
         resource_name = "documents"
         authentication = MultiAuthentication(
-            SessionAuthentication(), OAuthAuthentication(), GeonodeApiKeyAuthentication()
+            SessionAuthentication(), OAuthAuthentication(), GeonodeApiKeyAuthentication(),
+                                             GeonodeTokenAuthentication())
         )

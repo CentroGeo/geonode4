@@ -76,6 +76,8 @@ from geonode.resource.models import ExecutionRequest
 from geonode.resource.api.tasks import resouce_service_dispatcher
 from geonode.resource.manager import resource_manager
 
+from geonode.api.authorization import GeonodeTokenAuthentication
+
 from guardian.shortcuts import get_objects_for_user
 
 from .permissions import (
@@ -98,6 +100,7 @@ from .serializers import (
     RegionSerializer,
     ThesaurusKeywordSerializer,
     ExtraMetadataSerializer,
+    RegistrationSerializer
 )
 from .pagination import GeoNodeApiPagination
 from geonode.base.utils import validate_extra_metadata
@@ -112,7 +115,7 @@ class UserViewSet(DynamicModelViewSet):
     API endpoint that allows users to be viewed or edited.
     """
 
-    authentication_classes = [SessionAuthentication, BasicAuthentication, OAuth2Authentication]
+    authentication_classes = [SessionAuthentication, BasicAuthentication, GeonodeTokenAuthentication, OAuth2Authentication]
     permission_classes = [
         IsAuthenticated,
         IsSelfOrAdminOrReadOnly,
@@ -120,6 +123,14 @@ class UserViewSet(DynamicModelViewSet):
     filter_backends = [DynamicFilterBackend, DynamicSortingFilter, DynamicSearchFilter]
     serializer_class = UserSerializer
     pagination_class = GeoNodeApiPagination
+
+    def create(self, request):
+        serializer = RegistrationSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
     def get_queryset(self):
         """
@@ -177,7 +188,7 @@ class GroupViewSet(DynamicModelViewSet):
     API endpoint that allows gropus to be viewed or edited.
     """
 
-    authentication_classes = [SessionAuthentication, BasicAuthentication, OAuth2Authentication]
+    authentication_classes = [SessionAuthentication, BasicAuthentication, GeonodeTokenAuthentication, OAuth2Authentication]
     permission_classes = [
         IsAuthenticatedOrReadOnly,
         IsManagerEditOrAdmin,
@@ -307,7 +318,7 @@ class OwnerViewSet(WithDynamicViewSetMixin, ListModelMixin, RetrieveModelMixin, 
     API endpoint that lists all possible owners.
     """
 
-    authentication_classes = [SessionAuthentication, BasicAuthentication, OAuth2Authentication]
+    authentication_classes = [SessionAuthentication, BasicAuthentication, GeonodeTokenAuthentication, OAuth2Authentication]
     permission_classes = [
         AllowAny,
     ]
@@ -337,7 +348,7 @@ class ResourceBaseViewSet(DynamicModelViewSet):
     API endpoint that allows base resources to be viewed or edited.
     """
 
-    authentication_classes = [SessionAuthentication, BasicAuthentication, OAuth2Authentication]
+    authentication_classes = [SessionAuthentication, BasicAuthentication, GeonodeTokenAuthentication, OAuth2Authentication]
     permission_classes = [IsAuthenticatedOrReadOnly, UserHasPerms]
     filter_backends = [
         DynamicFilterBackend,
