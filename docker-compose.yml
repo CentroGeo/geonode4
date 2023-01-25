@@ -130,6 +130,8 @@ services:
     container_name: db4${COMPOSE_PROJECT_NAME}
     env_file:
       - .env
+    ports:
+      - 5434:5432
     volumes:
       - dbdata:/var/lib/postgresql/data
       - dbbackups:/pg_backups
