@@ -14,7 +14,7 @@ RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-k
 RUN echo "deb http://deb.debian.org/debian/ bullseye main contrib non-free" | tee /etc/apt/sources.list.d/debian.list
 
 # This section is borrowed from the official Django image but adds GDAL and others
-RUN apt-get update -y && apt-get upgrade -y
+RUN apt-get update -y && apt-get upgrade -y --fix-missing
 
 # Prepraing dependencies
 RUN apt-get install -y \
@@ -22,7 +22,7 @@ RUN apt-get install -y \
     libxml2 libxslt1-dev zlib1g-dev libjpeg-dev \
     libmemcached-dev libldap2-dev libsasl2-dev libffi-dev
 
-RUN apt-get install -y --no-install-recommends \
+RUN apt-get install -y --no-install-recommends --fix-missing \
     gcc zip gettext geoip-bin cron \
     postgresql-client-13 \
     sqlite3 spatialite-bin libsqlite3-mod-spatialite \

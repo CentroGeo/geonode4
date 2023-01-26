@@ -52,6 +52,7 @@ from geonode.base.bbox_utils import filter_bbox
 from geonode.groups.models import GroupProfile
 from geonode.utils import check_ogc_backend
 from geonode.security.utils import get_visible_resources
+from .authentication import OAuthAuthentication
 from .authorization import GeoNodeAuthorization, GeonodeApiKeyAuthentication, GeonodeTokenAuthentication
 
 from .api import (
@@ -604,7 +605,6 @@ class ResourceBaseResource(CommonModelApi):
         authentication = MultiAuthentication(
             SessionAuthentication(), OAuthAuthentication(), GeonodeApiKeyAuthentication(),
                                              GeonodeTokenAuthentication())
-        )
 
 
 class FeaturedResourceBaseResource(CommonModelApi):
@@ -618,7 +618,6 @@ class FeaturedResourceBaseResource(CommonModelApi):
         authentication = MultiAuthentication(
             SessionAuthentication(), OAuthAuthentication(), GeonodeApiKeyAuthentication(),
                                              GeonodeTokenAuthentication())
-        )
 
 
 class LayerResource(CommonModelApi):
@@ -752,7 +751,6 @@ class LayerResource(CommonModelApi):
         authentication = MultiAuthentication(
             SessionAuthentication(), OAuthAuthentication(), GeonodeApiKeyAuthentication(),
                                              GeonodeTokenAuthentication())
-        )
         filtering = CommonMetaApi.filtering
         # Allow filtering using ID
         filtering.update({"id": ALL, "name": ALL, "alternate": ALL, "metadata_only": ALL})
@@ -822,7 +820,6 @@ class MapResource(CommonModelApi):
         authentication = MultiAuthentication(
             SessionAuthentication(), OAuthAuthentication(), GeonodeApiKeyAuthentication(),
                                              GeonodeTokenAuthentication())
-        )
 
 
 class GeoAppResource(CommonModelApi):
@@ -875,7 +872,6 @@ class GeoAppResource(CommonModelApi):
         authentication = MultiAuthentication(
             SessionAuthentication(), OAuthAuthentication(), GeonodeApiKeyAuthentication(),
                                              GeonodeTokenAuthentication())
-        )
 
 
 class DocumentResource(CommonModelApi):
@@ -935,4 +931,3 @@ class DocumentResource(CommonModelApi):
         authentication = MultiAuthentication(
             SessionAuthentication(), OAuthAuthentication(), GeonodeApiKeyAuthentication(),
                                              GeonodeTokenAuthentication())
-        )
