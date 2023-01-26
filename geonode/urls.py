@@ -121,7 +121,7 @@ urlpatterns += [
     url(r"^api/v2/", include("geonode.api.urls")),
     url(r"^api/v2/", include("geonode.management_commands_http.urls")),
     url(r"^api/v2/api-auth/", include("rest_framework.urls", namespace="geonode_rest_framework")),
-    url(r'^api-token-auth/', rest_views.obtain_auth_token),
+    url(r"^api-token-auth/", rest_views.obtain_auth_token),
     url(r"", include(api.urls)),
 ]
 
