@@ -77,7 +77,14 @@ def _resolve_map(request, id, permission="base.change_resourcebase", msg=_PERMIS
 
 @login_required
 @check_keyword_write_perms
-def map_metadata(request, mapid, template="maps/map_metadata.html", ajax=True):
+def map_metadata(
+    request,
+    mapid,
+    template="maps/map_metadata.html",
+    ajax=True,
+    panel_template="layouts/map_panels.html",
+    custom_metadata=None,
+):
     try:
         map_obj = _resolve_map(request, mapid, "base.change_resourcebase_metadata", _PERMISSION_MSG_VIEW)
     except PermissionDenied:
@@ -155,7 +162,6 @@ def map_metadata(request, mapid, template="maps/map_metadata.html", ajax=True):
                 tkeywords_form.fields[tid].initial = values
 
     if request.method == "POST" and map_form.is_valid() and category_form.is_valid() and tkeywords_form.is_valid():
-
         new_poc = map_form.cleaned_data["poc"]
         new_author = map_form.cleaned_data["metadata_author"]
         new_keywords = current_keywords if request.keyword_readonly else map_form.cleaned_data["keywords"]
@@ -285,6 +291,8 @@ def map_metadata(request, mapid, template="maps/map_metadata.html", ajax=True):
             "resource": map_obj,
             "map": map_obj,
             "config": json.dumps(map_obj.blob),
+            "panel_template": panel_template,
+            "custom_metadata": custom_metadata,
             "map_form": map_form,
             "poc_form": poc_form,
             "author_form": author_form,
@@ -554,7 +562,7 @@ def ajax_url_lookup(request):
     return HttpResponse(content=json.dumps(json_dict), content_type="text/plain")
 
 
-def map_metadata_detail(request, mapid, template="maps/map_metadata_detail.html"):
+def map_metadata_detail(request, mapid, template="maps/map_metadata_detail.html", custom_metadata=None):
     try:
         map_obj = _resolve_map(request, mapid, "view_resourcebase")
     except PermissionDenied:
@@ -572,7 +580,12 @@ def map_metadata_detail(request, mapid, template="maps/map_metadata_detail.html"
             group = None
     site_url = settings.SITEURL.rstrip("/") if settings.SITEURL.startswith("http") else settings.SITEURL
     register_event(request, EventType.EVENT_VIEW_METADATA, map_obj)
-    return render(request, template, context={"resource": map_obj, "group": group, "SITEURL": site_url})
+
+    return render(
+        request,
+        template,
+        context={"resource": map_obj, "group": group, "SITEURL": site_url, "custom_metadata": custom_metadata},
+    )
 
 
 @login_required
