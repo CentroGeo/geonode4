@@ -44,6 +44,8 @@ from geonode.monitoring.models import EventType
 from geonode.resource.manager import resource_manager
 from geonode.utils import resolve_object
 
+from geonode.api.authorization import GeonodeTokenAuthentication
+
 logger = logging.getLogger(__name__)
 
 
@@ -53,7 +55,7 @@ class MapViewSet(DynamicModelViewSet):
     """
 
     http_method_names = ["get", "patch", "post", "put"]
-    authentication_classes = [SessionAuthentication, BasicAuthentication, OAuth2Authentication]
+    authentication_classes = [SessionAuthentication, BasicAuthentication, GeonodeTokenAuthentication, OAuth2Authentication]
     permission_classes = [
         IsAuthenticatedOrReadOnly,
         UserHasPerms(perms_dict={"default": {"POST": ["base.add_resourcebase"]}}),

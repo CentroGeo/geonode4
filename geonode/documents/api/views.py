@@ -43,6 +43,8 @@ from geonode.resource.manager import resource_manager
 from .serializers import DocumentSerializer
 from .permissions import DocumentPermissionsFilter
 
+from geonode.api.authorization import GeonodeTokenAuthentication
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -54,7 +56,7 @@ class DocumentViewSet(DynamicModelViewSet):
     """
 
     http_method_names = ["get", "patch", "put", "post"]
-    authentication_classes = [SessionAuthentication, BasicAuthentication, OAuth2Authentication]
+    authentication_classes = [SessionAuthentication, BasicAuthentication, GeonodeTokenAuthentication, OAuth2Authentication]
     permission_classes = [
         IsAuthenticatedOrReadOnly,
         UserHasPerms(perms_dict={"default": {"POST": ["base.add_resourcebase"]}}),
