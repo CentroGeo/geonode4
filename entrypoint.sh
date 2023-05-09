@@ -25,6 +25,12 @@ echo "-----------------------------------------------------"
 
 pip install --upgrade --no-cache-dir  --src /usr/src -r requirements.txt
 
+python manage.py migrate --database datastore
+
+apt update
+
+apt install gdal-bin
+
 invoke update
 
 source $HOME/.bashrc
