@@ -23,6 +23,8 @@ echo "-----------------------------------------------------"
 echo "STARTING DJANGO ENTRYPOINT $(date)"
 echo "-----------------------------------------------------"
 
+pip install -r requirements.txt
+
 invoke update
 
 source $HOME/.bashrc
