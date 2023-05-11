@@ -6,7 +6,7 @@ RUN mkdir -p /usr/src/geonode
 ## Enable postgresql-client-13
 RUN apt-get update -y && apt-get install curl wget unzip gnupg2 -y
 RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
-# will install python3.10 
+# will install python3.10
 RUN apt-get install lsb-core -y
 RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" |tee  /etc/apt/sources.list.d/pgdg.list
 
@@ -16,7 +16,7 @@ RUN apt-get install -y \
     libxml2 libxslt1-dev zlib1g-dev libjpeg-dev \
     libmemcached-dev libldap2-dev libsasl2-dev libffi-dev
 
-RUN apt-get update -y && apt-get install -y --no-install-recommends \
+RUN apt-get update -y && apt-get install -y --no-install-recommends  --fix-missing \
     gcc zip gettext geoip-bin cron \
     postgresql-client-13 \
     python3-all-dev python3-dev \

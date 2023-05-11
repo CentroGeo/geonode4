@@ -25,6 +25,8 @@ echo "-----------------------------------------------------"
 
 pip install --upgrade --no-cache-dir  --src /usr/src -r requirements.txt
 
+python manage.py migrate
+
 python manage.py migrate --database datastore
 
 apt update
@@ -80,6 +82,6 @@ echo "-----------------------------------------------------"
 echo "FINISHED DJANGO ENTRYPOINT --------------------------"
 echo "-----------------------------------------------------"
 
-# Run the CMD 
+# Run the CMD
 echo "got command $cmd"
 exec $cmd
