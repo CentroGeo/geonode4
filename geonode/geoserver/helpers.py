@@ -25,6 +25,7 @@ import uuid
 import json
 import errno
 import typing
+import secrets
 import logging
 import datetime
 import tempfile
@@ -411,9 +412,9 @@ def set_dataset_style(saved_dataset, title, sld, base_file=None):
         try:
             _sld_format = _extract_style_version_from_sld(sld)
             style = gs_catalog.create_style(
-                saved_dataset.name,
+                f'{saved_dataset.name}_{secrets.token_hex(nbytes=2)}',
                 sld,
-                overwrite=True,
+                overwrite=False,
                 raw=True,
                 style_format=_sld_format,
                 workspace=saved_dataset.workspace,
@@ -423,23 +424,26 @@ def set_dataset_style(saved_dataset, title, sld, base_file=None):
 
     if layer and style:
         _old_styles = []
-        _old_styles.append(gs_catalog.get_style(name=saved_dataset.name))
-        _old_styles.append(gs_catalog.get_style(name=f"{saved_dataset.workspace}_{saved_dataset.name}"))
+        if gs_catalog.get_style(name=saved_dataset.name):
+            _old_styles.append(gs_catalog.get_style(name=saved_dataset.name))
+
+        if gs_catalog.get_style(name=f"{saved_dataset.workspace}_{saved_dataset.name}"):
+            _old_styles.append(gs_catalog.get_style(name=f"{saved_dataset.workspace}_{saved_dataset.name}"))
         if layer.default_style and layer.default_style.name:
-            _old_styles.append(gs_catalog.get_style(name=layer.default_style.name))
-            _old_styles.append(
-                gs_catalog.get_style(name=layer.default_style.name, workspace=layer.default_style.workspace)
-            )
+            d_style = gs_catalog.get_style(saved_dataset.name, workspace=saved_dataset.workspace)
+            if d_style:
+                _old_styles.append(d_style)
+
         layer.default_style = style
         gs_catalog.save(layer)
-        for _s in _old_styles:
-            try:
-                gs_catalog.delete(_s)
-                Link.objects.filter(
-                    resource=saved_dataset.resourcebase_ptr, name="Legend", url__contains=f"STYLE={_s.name}"
-                ).delete()
-            except Exception as e:
-                logger.debug(e)
+        # for _s in _old_styles:
+        #     try:
+        #         gs_catalog.delete(_s)
+        #         Link.objects.filter(
+        #             resource=saved_dataset.resourcebase_ptr, name="Legend", url__contains=f"STYLE={_s.name}"
+        #         ).delete()
+        #     except Exception as e:
+        #         logger.debug(e)
         set_styles(saved_dataset, gs_catalog)
 
 
@@ -1143,35 +1147,39 @@ def clean_styles(layer, gs_catalog: Catalog):
 
 def set_styles(layer, gs_catalog: Catalog):
     style_set = []
+    
+    for _style in layer.styles.all():
+        style_set.append(_style)
+
     gs_dataset = get_dataset(layer, gs_catalog)
     if gs_dataset:
         default_style = gs_dataset.get_full_default_style()
         if default_style:
             # make sure we are not using a default SLD (which won't be editable)
             layer.default_style, _gs_default_style = save_style(default_style, layer)
-            try:
-                if (
-                    default_style.name != _gs_default_style.name
-                    or default_style.workspace != _gs_default_style.workspace
-                ):
-                    logger.debug(f'set_style: Setting default style "{_gs_default_style.name}" for layer "{layer.name}')
+            # try:
+            #     if (
+            #         default_style.name != _gs_default_style.name
+            #         or default_style.workspace != _gs_default_style.workspace
+            #     ):
+            #         logger.debug(f'set_style: Setting default style "{_gs_default_style.name}" for layer "{layer.name}')
 
-                    gs_dataset.default_style = _gs_default_style
-                    gs_catalog.save(gs_dataset)
-                    if default_style.name not in DEFAULT_STYLE_NAME:
-                        logger.debug(
-                            f'set_style: Retrieving no-workspace default style "{default_style.name}" for deletion'
-                        )
-                        style_to_delete = gs_catalog.get_style(name=default_style.name, workspace=None, recursive=True)
-                        if style_to_delete:
-                            gs_catalog.delete(style_to_delete, purge=True, recurse=False)
-                            logger.debug(f"set_style: No-ws default style deleted: {default_style.name}")
-                        else:
-                            logger.debug(f"set_style: No-ws default style does not exist: {default_style.name}")
-            except Exception as e:
-                logger.error(
-                    f'Error setting default style "{_gs_default_style.name}" for layer "{layer.name}', exc_info=e
-                )
+            #         gs_dataset.default_style = _gs_default_style
+            #         gs_catalog.save(gs_dataset)
+                    # if default_style.name not in DEFAULT_STYLE_NAME:
+                    #     logger.debug(
+                    #         f'set_style: Retrieving no-workspace default style "{default_style.name}" for deletion'
+                    #     )
+                    #     style_to_delete = gs_catalog.get_style(name=default_style.name, workspace=None, recursive=True)
+                    #     if style_to_delete:
+                    #         gs_catalog.delete(style_to_delete, purge=True, recurse=False)
+                    #         logger.debug(f"set_style: No-ws default style deleted: {default_style.name}")
+                    #     else:
+                    #         logger.debug(f"set_style: No-ws default style does not exist: {default_style.name}")
+            # except Exception as e:
+            #     logger.error(
+            #         f'Error setting default style "{_gs_default_style.name}" for layer "{layer.name}', exc_info=e
+            #     )
 
             style_set.append(layer.default_style)
 

@@ -42,6 +42,7 @@ from rest_framework.exceptions import NotFound
 
 from geonode.storage.manager import StorageManager
 from geonode.resource.manager import resource_manager
+from geonode.geoserver.helpers import set_dataset_style
 
 from .serializers import (
     DatasetReplaceAppendSerializer,
@@ -84,6 +85,27 @@ class DatasetViewSet(DynamicModelViewSet):
         if self.action == "list":
             return DatasetListSerializer
         return DatasetSerializer
+    
+    
+    @action(
+        detail=False,
+        url_path="(?P<pk>\d+)/add_new_style",  # noqa
+        url_name="add-new-style",
+        methods=["put"],
+        serializer_class=DatasetSerializer,
+        permission_classes=[
+            IsAuthenticated
+        ],
+    )
+    def add_new_style(self, request, pk):
+        try: 
+            layer = Dataset.objects.get(id=pk)
+
+            if 'sld_style' in request.data:
+                set_dataset_style(layer,layer.alternate,request.data['sld_style'])
+                return Response(DatasetSerializer(layer).data)
+        except Dataset.DoesNotExist:
+            return Response({"error": "The dataset you requested does not exists" })
 
     @extend_schema(
         request=DatasetMetadataSerializer,
