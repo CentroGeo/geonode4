@@ -34,7 +34,7 @@ from geonode.base.api.pagination import GeoNodeApiPagination
 from geonode.base.api.permissions import UserHasPerms
 from geonode.layers.api.exceptions import GeneralDatasetException, InvalidDatasetException, InvalidMetadataException
 from geonode.layers.metadata import parse_metadata
-from geonode.layers.models import Dataset
+from geonode.layers.models import Dataset, Style
 from geonode.layers.utils import validate_input_source
 from geonode.maps.api.serializers import SimpleMapLayerSerializer, SimpleMapSerializer
 from geonode.resource.utils import update_resource
@@ -106,6 +106,75 @@ class DatasetViewSet(DynamicModelViewSet):
                 return Response(DatasetSerializer(layer).data)
         except Dataset.DoesNotExist:
             return Response({"error": "The dataset you requested does not exists" })
+        
+    @action(
+        detail=False,
+        url_path="(?P<pk>\d+)/change_default_style",  # noqa
+        url_name="change-default-style",
+        methods=["put"],
+        serializer_class=DatasetSerializer,
+        permission_classes=[
+            IsAuthenticated
+        ],
+    )
+    def change_default_style(self, request, pk):
+        layer = None
+        try: 
+            layer = Dataset.objects.get(id=pk)
+
+        except Dataset.DoesNotExist:
+            return Response({"error": "The dataset you requested does not exists" })
+        
+        
+        if layer and 'default_style_pk' in request.data:
+            try: 
+                style = Style.objects.get(id=request.data['default_style_pk'])
+                layer.default_style = style
+                layer.save()
+                return Response(DatasetSerializer(layer).data)
+            except Style.DoesNotExist:
+                return Response({"error": "The style you specified does not exists" })
+        
+    @action(
+        detail=False,
+        url_path="(?P<pk>\d+)/delete_style",  # noqa
+        url_name="delete-style",
+        methods=["put"],
+        serializer_class=DatasetSerializer,
+        permission_classes=[
+            IsAuthenticated
+        ],
+    )
+    def delete_style(self, request, pk):
+        layer = None
+        try: 
+            layer = Dataset.objects.get(id=pk)
+
+        except Dataset.DoesNotExist:
+            return Response({"error": "The dataset you requested does not exists" })
+        
+        
+        if layer and 'style_pk' in request.data:
+            try: 
+                style = Style.objects.get(id=request.data['style_pk'])
+                if layer.default_style == style:
+                    if len(list(layer.styles.all())) > 1:
+                        if layer.styles.all()[0] != style:
+                            layer.default_style = layer.styles.all()[0]
+                            layer.save()
+                            style.delete()
+                        else:
+                            total_styles = len(list(layer.styles.all()))
+                            layer.default_style = layer.styles.all()[total_styles - 1]
+                            layer.save()
+                            style.delete()
+                    else:
+                        return Response({"error": "Cannot delete default style, no other styles present for dataset" })
+                else:
+                    style.delete()
+                return Response(DatasetSerializer(layer).data)
+            except Style.DoesNotExist:
+                return Response({"error": "The style you specified does not exists" })
 
     @extend_schema(
         request=DatasetMetadataSerializer,
