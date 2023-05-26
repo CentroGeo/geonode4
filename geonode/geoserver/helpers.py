@@ -372,8 +372,13 @@ def edit_dataset_style(style,sld):
     style_to_edit = gs_catalog.get_style(name=style.name, workspace=style.workspace)
 
     if style_to_edit:
+
+        if sld and isinstance(sld, str):
+            sld = sld.strip("b'\n")
+            sld = re.sub(r"(\\r)|(\\n)", "", sld).encode("UTF-8")
+
         style = gs_catalog.create_style(
-            style.name, sld, overwrite=True, raw=True
+            style.name, sld, overwrite=True, raw=True, workspace=style.workspace
         )
         return style
     else:
