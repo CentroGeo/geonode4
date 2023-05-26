@@ -369,13 +369,15 @@ def get_sld_for(gs_catalog, layer):
 
 
 def edit_dataset_style(style,sld):
-    style_to_edit = gs_catalog.get_style(name=style.name, workspace=None, recursive=True)
+    style_to_edit = gs_catalog.get_style(name=style.name, workspace=style.workspace)
 
     if style_to_edit:
         style = gs_catalog.create_style(
             style.name, sld, overwrite=True, raw=True
         )
         return style
+    else:
+        return None
     
 def set_dataset_style(saved_dataset, title, sld, base_file=None):
     # Check SLD is valid

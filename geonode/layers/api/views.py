@@ -200,16 +200,20 @@ class DatasetViewSet(DynamicModelViewSet):
             return Response({"error": "The dataset you requested does not exists" })
         
         
-        if layer and 'style_pk' in request.data and 'style_sld' in request.data and 'sld_title' in request.data:
+        if layer and 'style_pk' in request.data and 'style_sld' in request.data:
             try: 
                 style = Style.objects.get(id=request.data['style_pk'])
                 
-                edit_dataset_style(style,request.data['style_sld'])
+                new_style = edit_dataset_style(style,request.data['style_sld'])
 
-                style.sld_title = request.data['sld_title']
-                style.save()
+                if new_style:
+                    style.sld_title = new_style.sld_title
+                    style.save()
 
-                return Response(DatasetSerializer(layer).data)
+                    return Response(DatasetSerializer(layer).data)
+                else:
+                    return Response({"error": "There was an error with the update, check your data" })
+
             except Style.DoesNotExist:
                 return Response({"error": "The style you specified does not exists" })
         else:
