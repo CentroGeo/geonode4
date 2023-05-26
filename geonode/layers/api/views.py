@@ -42,7 +42,7 @@ from rest_framework.exceptions import NotFound
 
 from geonode.storage.manager import StorageManager
 from geonode.resource.manager import resource_manager
-from geonode.geoserver.helpers import set_dataset_style
+from geonode.geoserver.helpers import set_dataset_style, delete_style_gs, edit_dataset_style
 
 from .serializers import (
     DatasetReplaceAppendSerializer,
@@ -160,10 +160,12 @@ class DatasetViewSet(DynamicModelViewSet):
                 if layer.default_style == style:
                     if len(list(layer.styles.all())) > 1:
                         if layer.styles.all()[0] != style:
+                            delete_style_gs(style)
                             layer.default_style = layer.styles.all()[0]
                             layer.save()
                             style.delete()
                         else:
+                            delete_style_gs(style)
                             total_styles = len(list(layer.styles.all()))
                             layer.default_style = layer.styles.all()[total_styles - 1]
                             layer.save()
@@ -171,10 +173,47 @@ class DatasetViewSet(DynamicModelViewSet):
                     else:
                         return Response({"error": "Cannot delete default style, no other styles present for dataset" })
                 else:
+                    delete_style_gs(style)
                     style.delete()
                 return Response(DatasetSerializer(layer).data)
             except Style.DoesNotExist:
                 return Response({"error": "The style you specified does not exists" })
+        else:
+            return Response({"error": "You must provide style_pk to delete a style" })
+    
+    @action(
+        detail=False,
+        url_path="(?P<pk>\d+)/edit_style",  # noqa
+        url_name="edit-style",
+        methods=["put"],
+        serializer_class=DatasetSerializer,
+        permission_classes=[
+            IsAuthenticated
+        ],
+    )
+    def edit_style(self, request, pk):
+        layer = None
+        try: 
+            layer = Dataset.objects.get(id=pk)
+
+        except Dataset.DoesNotExist:
+            return Response({"error": "The dataset you requested does not exists" })
+        
+        
+        if layer and 'style_pk' in request.data and 'style_sld' in request.data and 'sld_title' in request.data:
+            try: 
+                style = Style.objects.get(id=request.data['style_pk'])
+                
+                edit_dataset_style(style,request.data['style_sld'])
+
+                style.sld_title = request.data['sld_title']
+                style.save()
+
+                return Response(DatasetSerializer(layer).data)
+            except Style.DoesNotExist:
+                return Response({"error": "The style you specified does not exists" })
+        else:
+            return Response({"error": "TYou must provide the fields style_pk, style_sld and sld_title to update a style" })
 
     @extend_schema(
         request=DatasetMetadataSerializer,

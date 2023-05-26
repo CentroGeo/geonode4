@@ -368,6 +368,15 @@ def get_sld_for(gs_catalog, layer):
         return gs_style
 
 
+def edit_dataset_style(style,sld):
+    style_to_edit = gs_catalog.get_style(name=style.name, workspace=None, recursive=True)
+
+    if style_to_edit:
+        style = gs_catalog.create_style(
+            style.name, sld, overwrite=True, raw=True
+        )
+        return style
+    
 def set_dataset_style(saved_dataset, title, sld, base_file=None):
     # Check SLD is valid
     try:
@@ -898,6 +907,15 @@ def gs_slurp(
     td = finish - start
     output["stats"]["duration_sec"] = td.microseconds / 1000000 + td.seconds + td.days * 24 * 3600
     return output
+
+
+def delete_style_gs(style):
+    style_to_delete = gs_catalog.get_style(name=style.name,workspace=style.workspace)
+    if style_to_delete:
+        gs_catalog.delete(style_to_delete, purge=True, recurse=False)
+        logger.debug(f"set_style: No-ws default style deleted: {style.name}")
+    else:
+        logger.debug(f"set_style: No-ws default style does not exist: {style.name}")
 
 
 def get_stores(store_type=None):
