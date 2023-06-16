@@ -42,7 +42,7 @@ from rest_framework.exceptions import NotFound
 
 from geonode.storage.manager import StorageManager
 from geonode.resource.manager import resource_manager
-from geonode.geoserver.helpers import set_dataset_style, delete_style_gs, edit_dataset_style
+from geonode.geoserver.helpers import set_dataset_style, delete_style_gs, edit_dataset_style, change_default_style
 
 from .serializers import (
     DatasetReplaceAppendSerializer,
@@ -129,6 +129,7 @@ class DatasetViewSet(DynamicModelViewSet):
         if layer and 'default_style_pk' in request.data:
             try: 
                 style = Style.objects.get(id=request.data['default_style_pk'])
+                change_default_style(layer,style)
                 layer.default_style = style
                 layer.save()
                 return Response(DatasetSerializer(layer).data)
@@ -160,13 +161,15 @@ class DatasetViewSet(DynamicModelViewSet):
                 if layer.default_style == style:
                     if len(list(layer.styles.all())) > 1:
                         if layer.styles.all()[0] != style:
+                            change_default_style(layer,layer.styles.all()[0])
                             delete_style_gs(style)
                             layer.default_style = layer.styles.all()[0]
                             layer.save()
                             style.delete()
                         else:
-                            delete_style_gs(style)
                             total_styles = len(list(layer.styles.all()))
+                            change_default_style(layer,layer.styles.all()[total_styles - 1])
+                            delete_style_gs(style)
                             layer.default_style = layer.styles.all()[total_styles - 1]
                             layer.save()
                             style.delete()

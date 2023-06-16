@@ -1170,6 +1170,15 @@ def clean_styles(layer, gs_catalog: Catalog):
         logger.debug(f"Could not clean style for layer {layer.name} - STACK INFO", stack_info=True)
 
 
+def change_default_style(layer,style):
+    
+    gs_dataset = get_dataset(layer, gs_catalog)
+
+    _new_default_style = gs_catalog.get_style(name=style.name,workspace=style.workspace)
+
+    gs_dataset.default_style = _new_default_style
+    gs_catalog.save(gs_dataset)
+
 def set_styles(layer, gs_catalog: Catalog):
     style_set = []
     
