@@ -1191,29 +1191,29 @@ def set_styles(layer, gs_catalog: Catalog):
         if default_style:
             # make sure we are not using a default SLD (which won't be editable)
             layer.default_style, _gs_default_style = save_style(default_style, layer)
-            # try:
-            #     if (
-            #         default_style.name != _gs_default_style.name
-            #         or default_style.workspace != _gs_default_style.workspace
-            #     ):
-            #         logger.debug(f'set_style: Setting default style "{_gs_default_style.name}" for layer "{layer.name}')
+            try:
+                if (
+                    default_style.name != _gs_default_style.name
+                    or default_style.workspace != _gs_default_style.workspace
+                ):
+                    logger.debug(f'set_style: Setting default style "{_gs_default_style.name}" for layer "{layer.name}')
 
-            #         gs_dataset.default_style = _gs_default_style
-            #         gs_catalog.save(gs_dataset)
-                    # if default_style.name not in DEFAULT_STYLE_NAME:
-                    #     logger.debug(
-                    #         f'set_style: Retrieving no-workspace default style "{default_style.name}" for deletion'
-                    #     )
-                    #     style_to_delete = gs_catalog.get_style(name=default_style.name, workspace=None, recursive=True)
-                    #     if style_to_delete:
-                    #         gs_catalog.delete(style_to_delete, purge=True, recurse=False)
-                    #         logger.debug(f"set_style: No-ws default style deleted: {default_style.name}")
-                    #     else:
-                    #         logger.debug(f"set_style: No-ws default style does not exist: {default_style.name}")
-            # except Exception as e:
-            #     logger.error(
-            #         f'Error setting default style "{_gs_default_style.name}" for layer "{layer.name}', exc_info=e
-            #     )
+                    gs_dataset.default_style = _gs_default_style
+                    gs_catalog.save(gs_dataset)
+                    if default_style.name not in DEFAULT_STYLE_NAME:
+                        logger.debug(
+                            f'set_style: Retrieving no-workspace default style "{default_style.name}" for deletion'
+                        )
+                        style_to_delete = gs_catalog.get_style(name=default_style.name, workspace=None, recursive=True)
+                        if style_to_delete:
+                            gs_catalog.delete(style_to_delete, purge=True, recurse=False)
+                            logger.debug(f"set_style: No-ws default style deleted: {default_style.name}")
+                        else:
+                            logger.debug(f"set_style: No-ws default style does not exist: {default_style.name}")
+            except Exception as e:
+                logger.error(
+                    f'Error setting default style "{_gs_default_style.name}" for layer "{layer.name}', exc_info=e
+                )
 
             style_set.append(layer.default_style)
 
