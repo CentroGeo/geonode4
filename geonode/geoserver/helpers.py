@@ -451,7 +451,9 @@ def set_dataset_style(saved_dataset, title, sld, base_file=None):
         gs_catalog.save(layer)
         for _s in _old_styles:
             try:
-                # gs_catalog.delete(_s)
+                time_delta = datetime.datetime.now(datetime.timezone.utc) - saved_dataset.created
+                if time_delta.seconds < 60: 
+                    gs_catalog.delete(_s)
                 Link.objects.filter(
                     resource=saved_dataset.resourcebase_ptr, name="Legend", url__contains=f"STYLE={_s.name}"
                 ).delete()
