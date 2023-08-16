@@ -440,26 +440,23 @@ def set_dataset_style(saved_dataset, title, sld, base_file=None):
 
     if layer and style:
         _old_styles = []
-        if gs_catalog.get_style(name=saved_dataset.name):
-            _old_styles.append(gs_catalog.get_style(name=saved_dataset.name))
-
-        if gs_catalog.get_style(name=f"{saved_dataset.workspace}_{saved_dataset.name}"):
-            _old_styles.append(gs_catalog.get_style(name=f"{saved_dataset.workspace}_{saved_dataset.name}"))
+        _old_styles.append(gs_catalog.get_style(name=saved_dataset.name))
+        _old_styles.append(gs_catalog.get_style(name=f"{saved_dataset.workspace}_{saved_dataset.name}"))
         if layer.default_style and layer.default_style.name:
-            d_style = gs_catalog.get_style(saved_dataset.name, workspace=saved_dataset.workspace)
-            if d_style:
-                _old_styles.append(d_style)
-
+            _old_styles.append(gs_catalog.get_style(name=layer.default_style.name))
+            _old_styles.append(
+                gs_catalog.get_style(name=layer.default_style.name, workspace=layer.default_style.workspace)
+            )
         layer.default_style = style
         gs_catalog.save(layer)
-        # for _s in _old_styles:
-        #     try:
-        #         gs_catalog.delete(_s)
-        #         Link.objects.filter(
-        #             resource=saved_dataset.resourcebase_ptr, name="Legend", url__contains=f"STYLE={_s.name}"
-        #         ).delete()
-        #     except Exception as e:
-        #         logger.debug(e)
+        for _s in _old_styles:
+            try:
+                gs_catalog.delete(_s)
+                Link.objects.filter(
+                    resource=saved_dataset.resourcebase_ptr, name="Legend", url__contains=f"STYLE={_s.name}"
+                ).delete()
+            except Exception as e:
+                logger.debug(e)
         set_styles(saved_dataset, gs_catalog)
 
 
@@ -1182,8 +1179,8 @@ def change_default_style(layer,style):
 def set_styles(layer, gs_catalog: Catalog):
     style_set = []
     
-    for _style in layer.styles.all():
-        style_set.append(_style)
+    # for _style in layer.styles.all():
+    #     style_set.append(_style)
 
     gs_dataset = get_dataset(layer, gs_catalog)
     if gs_dataset:
