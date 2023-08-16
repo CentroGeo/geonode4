@@ -452,7 +452,7 @@ def set_dataset_style(saved_dataset, title, sld, base_file=None):
         for _s in _old_styles:
             try:
                 time_delta = datetime.datetime.now(datetime.timezone.utc) - saved_dataset.created
-                if time_delta.seconds < 60: 
+                if time_delta.seconds < 120: 
                     gs_catalog.delete(_s)
                 Link.objects.filter(
                     resource=saved_dataset.resourcebase_ptr, name="Legend", url__contains=f"STYLE={_s.name}"
@@ -1181,8 +1181,11 @@ def change_default_style(layer,style):
 def set_styles(layer, gs_catalog: Catalog):
     style_set = []
     
-    for _style in layer.styles.all():
-        style_set.append(_style)
+    
+    time_delta = datetime.datetime.now(datetime.timezone.utc) - layer.created
+    if time_delta.seconds > 120: 
+        for _style in layer.styles.all():
+            style_set.append(_style)
 
     gs_dataset = get_dataset(layer, gs_catalog)
     if gs_dataset:
