@@ -449,6 +449,11 @@ def set_dataset_style(saved_dataset, title, sld, base_file=None):
             )
         layer.default_style = style
         gs_catalog.save(layer)
+        
+        current_styles = layer._get_alternate_styles()
+        current_styles.append(style)
+        layer._set_alternate_styles(current_styles)
+        gs_catalog.save(layer)
         for _s in _old_styles:
             try:
                 time_delta = datetime.datetime.now(datetime.timezone.utc) - saved_dataset.created
