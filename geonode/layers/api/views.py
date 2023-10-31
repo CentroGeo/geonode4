@@ -162,21 +162,21 @@ class DatasetViewSet(DynamicModelViewSet):
                     if len(list(layer.styles.all())) > 1:
                         if layer.styles.all()[0] != style:
                             change_default_style(layer,layer.styles.all()[0])
-                            delete_style_gs(style)
+                            delete_style_gs(layer,style)
                             layer.default_style = layer.styles.all()[0]
                             layer.save()
                             style.delete()
                         else:
                             total_styles = len(list(layer.styles.all()))
                             change_default_style(layer,layer.styles.all()[total_styles - 1])
-                            delete_style_gs(style)
+                            delete_style_gs(layer,style)
                             layer.default_style = layer.styles.all()[total_styles - 1]
                             layer.save()
                             style.delete()
                     else:
                         return Response({"error": "Cannot delete default style, no other styles present for dataset" })
                 else:
-                    delete_style_gs(style)
+                    delete_style_gs(layer,style)
                     style.delete()
                 return Response(DatasetSerializer(layer).data)
             except Style.DoesNotExist:

@@ -920,8 +920,14 @@ def gs_slurp(
     return output
 
 
-def delete_style_gs(style):
+def delete_style_gs(layer,style):
     style_to_delete = gs_catalog.get_style(name=style.name,workspace=style.workspace)
+    
+    layer = gs_catalog.get_layer(layer.alternate)
+    current_styles = layer._get_alternate_styles()
+    layer._set_alternate_styles([x for x in current_styles if x.name != style_to_delete.name])
+    gs_catalog.save(layer)
+
     if style_to_delete:
         gs_catalog.delete(style_to_delete, purge=True, recurse=False)
         logger.debug(f"set_style: No-ws default style deleted: {style.name}")
