@@ -303,7 +303,7 @@ class TopicCategoryViewSet(WithDynamicViewSetMixin, ListModelMixin, RetrieveMode
     """
     API endpoint that lists categories.
     """
-
+    authentication_classes = [SessionAuthentication, BasicAuthentication, GeonodeTokenAuthentication, OAuth2Authentication]
     permission_classes = [
         AllowAny,
     ]
