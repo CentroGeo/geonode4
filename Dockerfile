@@ -1,8 +1,11 @@
 FROM ubuntu:22.04
+FROM ubuntu:22.04
 LABEL GeoNode development team
 
 RUN mkdir -p /usr/src/geonode
 
+## Enable postgresql-client-13
+RUN apt-get update -y && apt-get install curl wget unzip gnupg2 -y
 ## Enable postgresql-client-13
 RUN apt-get update -y && apt-get install curl wget unzip gnupg2 -y
 RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
@@ -23,6 +26,8 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends  --fix-missi
     python3-gdal python3-psycopg2 python3-ldap \
     python3-pip python3-pil python3-lxml \
     uwsgi uwsgi-plugin-python3 python3-gdbm python-is-python3 gdal-bin
+    python3-pip python3-pil python3-lxml \
+    uwsgi uwsgi-plugin-python3 python3-gdbm python-is-python3 gdal-bin
 
 RUN apt-get install -y devscripts build-essential debhelper pkg-kde-tools sharutils
 # RUN git clone https://salsa.debian.org/debian-gis-team/proj.git /tmp/proj
@@ -35,6 +40,7 @@ RUN pip3 install uwsgi \
 
 # Activate "memcached"
 RUN apt-get install -y memcached
+RUN pip install sherlock
 RUN pip install sherlock
 
 # add bower and grunt command

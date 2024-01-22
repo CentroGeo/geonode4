@@ -41,7 +41,7 @@ from django.core.files.base import ContentFile
 from django.contrib.auth import get_user_model
 from django.db.models.fields.json import JSONField
 from django.utils.functional import cached_property, classproperty
-from django.contrib.gis.geos import Polygon, Point
+from django.contrib.gis.geos import GEOSGeometry, Polygon, Point
 from django.contrib.gis.db.models import PolygonField
 from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
@@ -203,6 +203,21 @@ class Region(MPTTModel):
     def geographic_bounding_box(self):
         """BBOX is in the format: [x0,x1,y0,y1]."""
         return bbox_to_wkt(self.bbox_x0, self.bbox_x1, self.bbox_y0, self.bbox_y1, srid=self.srid)
+
+    @property
+    def geom(self):
+        srid, wkt = self.geographic_bounding_box.split(";")
+        srid = re.findall(r"\d+", srid)
+        geom = GEOSGeometry(wkt, srid=int(srid[0]))
+        geom.transform(4326)
+        return geom
+
+    def is_assignable_to_geom(self, extent_geom: GEOSGeometry):
+        region_geom = self.geom
+
+        if region_geom.contains(extent_geom) or region_geom.overlaps(extent_geom):
+            return True
+        return False
 
     class Meta:
         ordering = ("name",)
@@ -1349,7 +1364,7 @@ class ResourceBase(PolymorphicModel, PermissionLevelMixin, ItemBase):
 
     def get_absolute_url(self):
         try:
-            return self.get_real_instance().get_absolute_url()
+            return self.get_real_instance().get_absolute_url() if self != self.get_real_instance() else None
         except Exception as e:
             logger.exception(e)
             return None
@@ -1463,7 +1478,7 @@ class ResourceBase(PolymorphicModel, PermissionLevelMixin, ItemBase):
 
     @property
     def embed_url(self):
-        return self.get_real_instance().embed_url
+        return self.get_real_instance().embed_url if self != self.get_real_instance() else None
 
     def get_tiles_url(self):
         """Return URL for Z/Y/X mapping clients or None if it does not exist."""

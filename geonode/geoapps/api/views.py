@@ -55,7 +55,13 @@ class GeoAppViewSet(DynamicModelViewSet):
         DynamicSearchFilter,
         ExtentFilter,
         GeoAppPermissionsFilter,
+        DynamicFilterBackend,
+        DynamicSortingFilter,
+        DynamicSearchFilter,
+        ExtentFilter,
+        GeoAppPermissionsFilter,
     ]
+    queryset = GeoApp.objects.all().order_by("-created")
     queryset = GeoApp.objects.all().order_by("-created")
     serializer_class = GeoAppSerializer
     pagination_class = GeoNodeApiPagination

@@ -373,7 +373,6 @@ class DatasetsTest(GeoNodeBaseTestSupport):
             links = Link.objects.filter(resource=lyr.resourcebase_ptr, link_type="image")
             self.assertIsNotNone(links)
 
-            # get and update original link to external
             Link.objects.filter(resource=lyr.resourcebase_ptr, link_type="original").update(
                 url="http://google.com/test"
             )
@@ -1632,7 +1631,7 @@ class TestSetMetadata(TestCase):
             "date": datetime.datetime(2021, 4, 9, 9, 0, 46),
             "language": "eng",
             "purpose": None,
-            "spatial_representation_type": "dataset",
+            "spatial_representation_type": "vector",
             "supplemental_information": "No information provided",
             "temporal_extent_end": None,
             "temporal_extent_start": None,
@@ -1692,7 +1691,7 @@ class TestCustomMetadataParser(TestCase):
             "date": datetime.datetime(2021, 4, 9, 9, 0, 46),
             "language": "eng",
             "purpose": None,
-            "spatial_representation_type": "dataset",
+            "spatial_representation_type": "vector",
             "supplemental_information": "No information provided",
             "temporal_extent_end": None,
             "temporal_extent_start": None,

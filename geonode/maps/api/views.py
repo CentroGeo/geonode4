@@ -68,6 +68,7 @@ class MapViewSet(DynamicModelViewSet):
         MapPermissionsFilter,
     ]
     queryset = Map.objects.all().order_by("-created")
+    queryset = Map.objects.all().order_by("-created")
     serializer_class = MapSerializer
     pagination_class = GeoNodeApiPagination
 

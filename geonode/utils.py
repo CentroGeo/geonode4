@@ -34,6 +34,7 @@ import tarfile
 import datetime
 import requests
 import tempfile
+import ipaddress
 import traceback
 import subprocess
 
@@ -87,6 +88,7 @@ from urllib.parse import (
     urlparse,
     urlsplit,
     urlencode,
+    urlunparse,
     parse_qsl,
     ParseResult,
 )
@@ -1377,6 +1379,8 @@ def set_resource_default_links(instance, layer, prune=False, **kwargs):
     from geonode.base.models import Link
     from django.urls import reverse
     from django.utils.translation import ugettext
+    from geonode.layers.models import Dataset
+    from geonode.documents.models import Document
 
     # Prune old links
     if prune:
@@ -1446,9 +1450,15 @@ def set_resource_default_links(instance, layer, prune=False, **kwargs):
         # Create Raw Data download link
         if settings.DISPLAY_ORIGINAL_DATASET_LINK:
             logger.debug(" -- Resource Links[Create Raw Data download link]...")
-            download_url = urljoin(settings.SITEURL, reverse("download", args=[instance.id]))
-            while Link.objects.filter(resource=instance.resourcebase_ptr, url=download_url).count() > 1:
-                Link.objects.filter(resource=instance.resourcebase_ptr, url=download_url).first().delete()
+            if isinstance(instance, Dataset):
+                download_url = build_absolute_uri(reverse("dataset_download", args=(instance.alternate,)))
+            elif isinstance(instance, Document):
+                download_url = build_absolute_uri(reverse("document_download", args=(instance.id,)))
+            else:
+                download_url = None
+
+            while Link.objects.filter(resource=instance.resourcebase_ptr, link_type="original").exists():
+                Link.objects.filter(resource=instance.resourcebase_ptr, link_type="original").delete()
             Link.objects.update_or_create(
                 resource=instance.resourcebase_ptr,
                 url=download_url,
@@ -1884,6 +1894,42 @@ def build_absolute_uri(url):
     if url and "http" not in url:
         url = urljoin(settings.SITEURL, url)
     return url
+
+
+def remove_credentials_from_url(url):
+    # Parse the URL
+    parsed_url = urlparse(url)
+
+    # Remove the username and password from the parsed URL
+    parsed_url = parsed_url._replace(netloc=parsed_url.netloc.split("@")[-1])
+
+    # Reconstruct the URL without credentials
+    cleaned_url = urlunparse(parsed_url)
+
+    return cleaned_url
+
+
+def extract_ip_or_domain(url):
+    # Decode the URL to handle percent-encoded characters
+    _url = remove_credentials_from_url(unquote(url))
+
+    ip_regex = re.compile("^(?:http://|https://)(\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3})")
+    domain_regex = re.compile("^(?:http://|https://)([a-zA-Z0-9.-]+)")
+
+    match = ip_regex.findall(_url)
+    if len(match):
+        ip_address = match[0]
+        try:
+            ipaddress.ip_address(ip_address)  # Validate the IP address
+            return ip_address
+        except ValueError:
+            pass
+
+    match = domain_regex.findall(_url)
+    if len(match):
+        return match[0]
+
+    return None
 
 
 def get_xpath_value(
