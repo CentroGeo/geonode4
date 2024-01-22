@@ -24,7 +24,6 @@ from dynamic_rest.filters import DynamicFilterBackend, DynamicSortingFilter
 
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 
 from oauth2_provider.contrib.rest_framework import OAuth2Authentication
@@ -39,19 +38,12 @@ from geonode.layers.models import Dataset, Style
 from geonode.layers.utils import validate_input_source
 from geonode.maps.api.serializers import SimpleMapLayerSerializer, SimpleMapSerializer
 from geonode.resource.utils import update_resource
-from geonode.resource.utils import update_resource
 from rest_framework.exceptions import NotFound
 
 from geonode.storage.manager import StorageManager
 from geonode.resource.manager import resource_manager
 from geonode.geoserver.helpers import set_dataset_style, delete_style_gs, edit_dataset_style, change_default_style
 
-from .serializers import (
-    DatasetReplaceAppendSerializer,
-    DatasetSerializer,
-    DatasetListSerializer,
-    DatasetMetadataSerializer,
-)
 from .serializers import (
     DatasetReplaceAppendSerializer,
     DatasetSerializer,
@@ -85,7 +77,6 @@ class DatasetViewSet(DynamicModelViewSet):
         ExtentFilter,
         DatasetPermissionsFilter,
     ]
-    queryset = Dataset.objects.all().order_by("-created")
     queryset = Dataset.objects.all().order_by("-created")
     serializer_class = DatasetSerializer
     pagination_class = GeoNodeApiPagination
@@ -438,18 +429,14 @@ class DatasetViewSet(DynamicModelViewSet):
 
             xml_file = files.pop("xml_file", None)
             sld_file = files.pop("sld_file", None)
-            xml_file = files.pop("xml_file", None)
-            sld_file = files.pop("sld_file", None)
 
             call_kwargs = {
                 "instance": dataset,
-                "vals": {"files": list(files.values()), "user": request.user},
                 "vals": {"files": list(files.values()), "user": request.user},
                 "store_spatial_files": store_spatial_files,
                 "xml_file": xml_file,
                 "metadata_uploaded": True if xml_file is not None else False,
                 "sld_file": sld_file,
-                "sld_uploaded": True if sld_file is not None else False,
                 "sld_uploaded": True if sld_file is not None else False,
             }
 
@@ -459,13 +446,10 @@ class DatasetViewSet(DynamicModelViewSet):
             raise GeneralDatasetException(e)
         finally:
             """
-            """
             Always keep the temporary folder under control.
-            """
             """
             if not store_spatial_files:
                 storage_manager.delete_retrieved_paths()
         # For now, we will return the input dataset
-        data = {"alternate": dataset.alternate, "state": "success", "action": action}
         data = {"alternate": dataset.alternate, "state": "success", "action": action}
         return Response(data)
