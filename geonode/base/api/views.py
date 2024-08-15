@@ -1505,7 +1505,6 @@ class ResourceBaseViewSet(DynamicModelViewSet):
 
 
 def base_linked_resources(instance, user, params):
-
     try:
         resource_type = params.get("resource_type")
         link_type = params.get("link_type")

@@ -3,10 +3,10 @@ version: '3.9'
 # Common Django template for GeoNode and Celery services below
 x-common-django:
   &default-common-django
-  image: geonode/geonode:4.2.3
-  build:
-      context: ./
-      dockerfile: Dockerfile
+  image: geonode/geonode:4.2.5
+  #build:
+  #    context: ./
+  #    dockerfile: Dockerfile
   restart: unless-stopped
   env_file:
     - .env
@@ -118,7 +118,7 @@ services:
         condition: service_healthy
 
   data-dir-conf:
-    image: geonode/geoserver_data:2.24.2-v1
+    image: geonode/geoserver_data:2.24.2-v2
     container_name: gsconf4${COMPOSE_PROJECT_NAME}
     entrypoint: sleep infinity
     volumes:
