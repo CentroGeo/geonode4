@@ -76,7 +76,27 @@ def user_serializer():
 
     return ser.UserSerializer
 
+class RegistrationSerializer(serializers.ModelSerializer):
+    password2 = serializers.CharField(style={"input_type": "password"}, write_only=True)
 
+    class Meta:
+        model = get_user_model()
+        fields = ['username', 'password', 'password2']
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
+
+    def save(self):
+        UserModel = get_user_model()
+        user = UserModel(username=self.validated_data['username'])
+        password = self.validated_data['password']
+        password2 = self.validated_data['password2']
+        if password != password2:
+            raise serializers.ValidationError({'password': 'Passwords must match.'})
+        user.set_password(password)
+        user.save()
+        return user
+    
 class BaseDynamicModelSerializer(DynamicModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)

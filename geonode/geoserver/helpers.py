@@ -25,6 +25,7 @@ import uuid
 import json
 import errno
 import typing
+import secrets
 import logging
 import datetime
 import tempfile
@@ -363,7 +364,22 @@ def get_sld_for(gs_catalog, layer):
     else:
         return gs_style
 
+def edit_dataset_style(style,sld):
+    style_to_edit = gs_catalog.get_style(name=style.name, workspace=style.workspace)
 
+    if style_to_edit:
+
+        if sld and isinstance(sld, str):
+            sld = sld.strip("b'\n")
+            sld = re.sub(r"(\\r)|(\\n)", "", sld).encode("UTF-8")
+
+        style = gs_catalog.create_style(
+            style.name, sld, overwrite=True, raw=True, workspace=style.workspace
+        )
+        return style
+    else:
+        return None
+    
 def set_dataset_style(saved_dataset, title, sld, base_file=None):
     # Check SLD is valid
     try:
@@ -408,9 +424,9 @@ def set_dataset_style(saved_dataset, title, sld, base_file=None):
         try:
             _sld_format = _extract_style_version_from_sld(sld)
             style = gs_catalog.create_style(
-                saved_dataset.name,
+                f'{saved_dataset.name}_{secrets.token_hex(nbytes=2)}',
                 sld,
-                overwrite=True,
+                overwrite=False,
                 raw=True,
                 style_format=_sld_format,
                 workspace=saved_dataset.workspace,
@@ -429,9 +445,16 @@ def set_dataset_style(saved_dataset, title, sld, base_file=None):
             )
         layer.default_style = style
         gs_catalog.save(layer)
+
+        current_styles = layer._get_alternate_styles()
+        current_styles.append(style)
+        layer._set_alternate_styles(current_styles)
+        gs_catalog.save(layer)
         for _s in _old_styles:
             try:
-                gs_catalog.delete(_s)
+                time_delta = datetime.datetime.now(datetime.timezone.utc) - saved_dataset.created
+                if time_delta.seconds < 120: 
+                    gs_catalog.delete(_s)
                 Link.objects.filter(
                     resource=saved_dataset.resourcebase_ptr, name="Legend", url__contains=f"STYLE={_s.name}"
                 ).delete()
@@ -890,6 +913,19 @@ def gs_slurp(
     output["stats"]["duration_sec"] = td.microseconds / 1000000 + td.seconds + td.days * 24 * 3600
     return output
 
+def delete_style_gs(layer,style):
+    style_to_delete = gs_catalog.get_style(name=style.name,workspace=style.workspace)
+
+    layer = gs_catalog.get_layer(layer.alternate)
+    current_styles = layer._get_alternate_styles()
+    layer._set_alternate_styles([x for x in current_styles if x.name != style_to_delete.name])
+    gs_catalog.save(layer)
+
+    if style_to_delete:
+        gs_catalog.delete(style_to_delete, purge=True, recurse=False)
+        logger.debug(f"set_style: No-ws default style deleted: {style.name}")
+    else:
+        logger.debug(f"set_style: No-ws default style does not exist: {style.name}")
 
 def get_stores(store_type=None):
     cat = gs_catalog
@@ -1137,9 +1173,24 @@ def clean_styles(layer, gs_catalog: Catalog):
         logger.warning(f"Could not clean style for layer {layer.name}", exc_info=e)
         logger.debug(f"Could not clean style for layer {layer.name} - STACK INFO", stack_info=True)
 
+def change_default_style(layer,style):
+
+    gs_dataset = get_dataset(layer, gs_catalog)
+
+    _new_default_style = gs_catalog.get_style(name=style.name,workspace=style.workspace)
+
+    gs_dataset.default_style = _new_default_style
+    gs_catalog.save(gs_dataset)
+
 
 def set_styles(layer, gs_catalog: Catalog):
     style_set = []
+
+    time_delta = datetime.datetime.now(datetime.timezone.utc) - layer.created
+    if time_delta.seconds > 120: 
+        for _style in layer.styles.all():
+            style_set.append(_style)
+            
     gs_dataset = get_dataset(layer, gs_catalog)
     if gs_dataset:
         default_style = gs_dataset.get_full_default_style()

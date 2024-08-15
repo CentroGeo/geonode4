@@ -88,6 +88,8 @@ from .permissions import (
     UserHasPerms,
 )
 
+from geonode.api.authorization import GeonodeTokenAuthentication
+
 from .serializers import (
     FavoriteSerializer,
     PermSpecSerialiazer,
@@ -116,7 +118,7 @@ class GroupViewSet(DynamicModelViewSet):
     API endpoint that allows gropus to be viewed or edited.
     """
 
-    authentication_classes = [SessionAuthentication, BasicAuthentication, OAuth2Authentication]
+    authentication_classes = [SessionAuthentication, BasicAuthentication, OAuth2Authentication, GeonodeTokenAuthentication]
     permission_classes = [
         IsAuthenticatedOrReadOnly,
         IsManagerEditOrAdmin,
@@ -178,6 +180,7 @@ class RegionViewSet(WithDynamicViewSetMixin, ListModelMixin, RetrieveModelMixin,
     API endpoint that lists regions.
     """
 
+    authentication_classes = [SessionAuthentication, BasicAuthentication, GeonodeTokenAuthentication, OAuth2Authentication]
     permission_classes = [
         AllowAny,
     ]
@@ -232,6 +235,7 @@ class TopicCategoryViewSet(WithDynamicViewSetMixin, ListModelMixin, RetrieveMode
     API endpoint that lists categories.
     """
 
+    authentication_classes = [SessionAuthentication, BasicAuthentication, GeonodeTokenAuthentication, OAuth2Authentication]
     permission_classes = [
         AllowAny,
     ]
@@ -246,7 +250,7 @@ class OwnerViewSet(WithDynamicViewSetMixin, ListModelMixin, RetrieveModelMixin, 
     API endpoint that lists all possible owners.
     """
 
-    authentication_classes = [SessionAuthentication, BasicAuthentication, OAuth2Authentication]
+    authentication_classes = [SessionAuthentication, BasicAuthentication, OAuth2Authentication, GeonodeTokenAuthentication]
     permission_classes = [
         AllowAny,
     ]
@@ -302,7 +306,7 @@ class ResourceBaseViewSet(ApiPresetsInitializer, DynamicModelViewSet, Advertised
     API endpoint that allows base resources to be viewed or edited.
     """
 
-    authentication_classes = [SessionAuthentication, BasicAuthentication, OAuth2Authentication]
+    authentication_classes = [SessionAuthentication, BasicAuthentication, OAuth2Authentication, GeonodeTokenAuthentication]
     permission_classes = [IsAuthenticatedOrReadOnly, UserHasPerms]
     filter_backends = [
         TKeywordsFilter,

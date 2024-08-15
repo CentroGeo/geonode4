@@ -39,6 +39,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
+from geonode.api.authorization import GeonodeTokenAuthentication
+
 from ..models import ExecutionRequest
 from .utils import filtered, resolve_type_serializer
 
@@ -131,7 +133,7 @@ class ExecutionRequestViewset(WithDynamicViewSetMixin, ListModelMixin, RetrieveM
     API endpoint that allows users to be viewed or edited.
     """
 
-    authentication_classes = [SessionAuthentication, BasicAuthentication, OAuth2Authentication]
+    authentication_classes = [SessionAuthentication, BasicAuthentication, GeonodeTokenAuthentication, OAuth2Authentication]
     permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
     filter_backends = [DynamicFilterBackend, DynamicSortingFilter, DynamicSearchFilter]
     serializer_class = ExecutionRequestSerializer
