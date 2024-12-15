@@ -32,8 +32,10 @@ from allauth.account.utils import user_field, user_email, user_username
 
 from ..utils import json_response
 from ..decorators import superuser_or_apiauth
-from ..base.auth import get_token_object_from_session, get_auth_token
+from ..base.auth import get_token_object_from_session, get_auth_token, create_auth_token
 
+from rest_framework import exceptions
+from rest_framework.authtoken.models import Token
 
 def verify_access_token(request, key):
     try:
@@ -86,6 +88,17 @@ def user_info(request):
 
     return response
 
+def auth_api_token(request):
+    key = request.POST.get("token")
+    if not key:
+        return None
+    try:
+        token = Token.objects.select_related('user').get(key=key)
+    except Token.DoesNotExist:
+        raise exceptions.AuthenticationFailed('Invalid token.')
+    if not token.user.is_active:
+        raise exceptions.AuthenticationFailed('User inactive or deleted.')
+    return token.user
 
 @csrf_exempt
 def verify_token(request):
@@ -95,7 +108,11 @@ def verify_token(request):
             access_token = request.POST.get("token")
             token = verify_access_token(request, access_token)
         except Exception as e:
-            return HttpResponse(json.dumps({"error": str(e)}), status=403, content_type="application/json")
+            usr = auth_api_token(request)
+            if usr:
+                token = create_auth_token(usr)
+            else:
+                return HttpResponse(json.dumps({"error": str(e)}), status=403, content_type="application/json")   
 
         if token:
             token_info = json.dumps(
