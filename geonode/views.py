@@ -35,6 +35,13 @@ from geonode import get_version
 from geonode.groups.models import GroupProfile
 from geonode.geoapps.models import GeoApp
 
+from datetime import datetime, timezone
+from rest_framework.authtoken.views import ObtainAuthToken, get_application_model
+from rest_framework.authtoken.models import Token
+from rest_framework.response import Response
+from oauth2_provider.models import AccessToken
+from oauthlib.common import generate_token
+
 
 class AjaxLoginForm(forms.Form):
     password = forms.CharField(widget=forms.PasswordInput)
@@ -179,3 +186,38 @@ def metadata_update_redirect(request):
     url = request.POST["url"]
     client_redirect_url = hookset.metadata_update_redirect(url, request=request)
     return HttpResponse(content=client_redirect_url)
+
+
+class CustomAuthToken(ObtainAuthToken):
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data,
+                                           context={'request': request})
+        
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        token, created = Token.objects.get_or_create(user=user)
+
+        if not created:
+                # update the created time of the token to keep it valid
+                token.created = datetime.now(timezone.utc)
+                token.save()
+
+        Application = get_application_model()
+        app = Application.objects.get(name=settings.OAUTH2_DEFAULT_BACKEND_CLIENT_NAME)
+        _expire_time = datetime.datetime.now(timezone.get_current_timezone())
+        _expire_delta = datetime.timedelta(seconds=1209600) # 2 weeks
+        expires = _expire_time + _expire_delta
+        (access_token, created) = AccessToken.objects.get_or_create(
+            user=user,
+            application=app,
+            expires=expires,
+            token=generate_token()
+        )
+        return Response({
+            'token': token.key,
+            'geonode_token': access_token.token,
+            'expires': expires,
+            'user_id': user.pk,
+            'email': user.email
+        })

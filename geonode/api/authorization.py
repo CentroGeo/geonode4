@@ -32,6 +32,7 @@ from django.conf import settings
 from geonode import geoserver
 from geonode.utils import check_ogc_backend
 
+from datetime import datetime, timedelta, timezone
 
 class GeoNodeAuthorization(DjangoAuthorization):
     """Object level API authorization based on GeoNode granular
@@ -139,6 +140,24 @@ class GeonodeTokenAuthentication(authentication.TokenAuthentication):
             msg = _('Invalid token header. Token string should not contain invalid characters.')
             raise authentication.TokenAuthentication.exceptions.AuthenticationFailed(msg)
         return self.authenticate_credentials(token)
+    
+    
+    def authenticate_credentials(self, key):
+        try:
+            token = self.model.objects.get(key=key)
+        except self.model.DoesNotExist:
+            raise authentication.exceptions.AuthenticationFailed('Invalid token')
+
+        if not token.user.is_active:
+            raise authentication.exceptions.AuthenticationFailed('User inactive or deleted')
+
+        # This is required for the time comparison
+        utc_now = datetime.now(timezone.utc)
+
+        if token.created < utc_now - timedelta(weeks=2):
+            raise authentication.exceptions.AuthenticationFailed('Token has expired')
+
+        return token.user, token
     
 class GeoNodeStyleAuthorization(GeoNodeAuthorization):
     """Object level API authorization based on GeoNode granular
