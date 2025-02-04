@@ -36,10 +36,10 @@ from geonode.groups.models import GroupProfile
 from geonode.geoapps.models import GeoApp
 
 from datetime import datetime, timezone
-from rest_framework.authtoken.views import ObtainAuthToken, get_application_model
+from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
-from oauth2_provider.models import AccessToken
+from oauth2_provider.models import AccessToken, get_application_model
 from oauthlib.common import generate_token
 
 
