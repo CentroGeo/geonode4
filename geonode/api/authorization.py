@@ -126,6 +126,7 @@ class GeonodeTokenAuthentication(authentication.TokenAuthentication):
             return None
         if auth[0].lower().decode() not in self.keyword:
             return None
+
         if len(auth) == 1:
             msg = _('Invalid token header. No credentials provided.')
             raise authentication.exceptions.AuthenticationFailed(msg)
@@ -138,6 +139,24 @@ class GeonodeTokenAuthentication(authentication.TokenAuthentication):
             msg = _('Invalid token header. Token string should not contain invalid characters.')
             raise authentication.TokenAuthentication.exceptions.AuthenticationFailed(msg)
         return self.authenticate_credentials(token)
+    
+    
+    def authenticate_credentials(self, key):
+        try:
+            token = self.model.objects.get(key=key)
+        except self.model.DoesNotExist:
+            raise authentication.exceptions.AuthenticationFailed('Invalid token')
+
+        if not token.user.is_active:
+            raise authentication.exceptions.AuthenticationFailed('User inactive or deleted')
+
+        # This is required for the time comparison
+        utc_now = datetime.now(timezone.utc)
+
+        if token.created < utc_now - timedelta(weeks=2):
+            raise authentication.exceptions.AuthenticationFailed('Token has expired')
+
+        return token.user, token
 
 
 class GeoNodeStyleAuthorization(GeoNodeAuthorization):
