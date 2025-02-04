@@ -35,7 +35,8 @@ from geonode import get_version
 from geonode.groups.models import GroupProfile
 from geonode.geoapps.models import GeoApp
 
-from datetime import datetime, timezone, timedelta
+from django.utils import timezone
+from datetime import datetime, timedelta
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
