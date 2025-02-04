@@ -35,7 +35,7 @@ from geonode import get_version
 from geonode.groups.models import GroupProfile
 from geonode.geoapps.models import GeoApp
 
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
@@ -204,8 +204,8 @@ class CustomAuthToken(ObtainAuthToken):
 
         Application = get_application_model()
         app = Application.objects.get(name=settings.OAUTH2_DEFAULT_BACKEND_CLIENT_NAME)
-        _expire_time = datetime.datetime.now(timezone.get_current_timezone())
-        _expire_delta = datetime.timedelta(seconds=1209600) # 2 weeks
+        _expire_time = datetime.now(timezone.get_current_timezone())
+        _expire_delta = timedelta(seconds=1209600) # 2 weeks
         expires = _expire_time + _expire_delta
         (access_token, created) = AccessToken.objects.get_or_create(
             user=user,
