@@ -130,23 +130,24 @@ class GeonodeTokenAuthentication(authentication.TokenAuthentication):
             return None
 
         if len(auth) == 1:
-            msg = _('Invalid token header. No credentials provided.')
+            msg = 'Invalid token header. No credentials provided.'
             raise authentication.exceptions.AuthenticationFailed(msg)
         elif len(auth) > 2:
-            msg = _('Invalid token header. Token string should not contain spaces.')
+            msg = 'Invalid token header. Token string should not contain spaces.'
             raise authentication.exceptions.AuthenticationFailed(msg)
         try:
             token = auth[1].decode()
         except UnicodeError:
-            msg = _('Invalid token header. Token string should not contain invalid characters.')
+            msg = 'Invalid token header. Token string should not contain invalid characters.'
             raise authentication.TokenAuthentication.exceptions.AuthenticationFailed(msg)
         return self.authenticate_credentials(token)
     
     
     def authenticate_credentials(self, key):
+        model = self.get_model()
         try:
-            token = self.model.objects.get(key=key)
-        except self.model.DoesNotExist:
+            token = model.objects.select_related('user').get(key=key)
+        except model.DoesNotExist:
             raise authentication.exceptions.AuthenticationFailed('Invalid token')
 
         if not token.user.is_active:
