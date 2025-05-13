@@ -32,6 +32,8 @@ from django.conf import settings
 from geonode import geoserver
 from geonode.utils import check_ogc_backend
 
+from datetime import datetime, timedelta, timezone
+
 
 class GeoNodeAuthorization(DjangoAuthorization):
     """Object level API authorization based on GeoNode granular
@@ -126,18 +128,38 @@ class GeonodeTokenAuthentication(authentication.TokenAuthentication):
             return None
         if auth[0].lower().decode() not in self.keyword:
             return None
+
         if len(auth) == 1:
-            msg = _('Invalid token header. No credentials provided.')
+            msg = 'Invalid token header. No credentials provided.'
             raise authentication.exceptions.AuthenticationFailed(msg)
         elif len(auth) > 2:
-            msg = _('Invalid token header. Token string should not contain spaces.')
+            msg = 'Invalid token header. Token string should not contain spaces.'
             raise authentication.exceptions.AuthenticationFailed(msg)
         try:
             token = auth[1].decode()
         except UnicodeError:
-            msg = _('Invalid token header. Token string should not contain invalid characters.')
+            msg = 'Invalid token header. Token string should not contain invalid characters.'
             raise authentication.TokenAuthentication.exceptions.AuthenticationFailed(msg)
         return self.authenticate_credentials(token)
+    
+    
+    def authenticate_credentials(self, key):
+        model = self.get_model()
+        try:
+            token = model.objects.select_related('user').get(key=key)
+        except model.DoesNotExist:
+            raise authentication.exceptions.AuthenticationFailed('Invalid token')
+
+        if not token.user.is_active:
+            raise authentication.exceptions.AuthenticationFailed('User inactive or deleted')
+
+        # This is required for the time comparison
+        utc_now = datetime.now(timezone.utc)
+
+        if token.created < utc_now - timedelta(weeks=2):
+            raise authentication.exceptions.AuthenticationFailed('Token has expired')
+
+        return token.user, token
 
 
 class GeoNodeStyleAuthorization(GeoNodeAuthorization):
