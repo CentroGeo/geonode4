@@ -684,11 +684,16 @@ class ResourceBaseViewSet(ApiPresetsInitializer, DynamicModelViewSet, Advertised
         try:
             resource = ResourceBase.objects.get(id=ast.literal_eval(resource_id))
 
+            map_thumb_from_bbox = False
+            if isinstance(resource.get_real_instance(), Map):
+                map_thumb_from_bbox = True
+
             if not isinstance(resource.get_real_instance(), (Dataset, Map)):
                 raise NotImplementedError("Not implemented: Endpoint available only for Dataset and Maps")
 
             request_body = request.data if request.data else json.loads(request.body)
             try:
+                # bbox format: (xmin, xmax, ymin, ymax)
                 bbox = request_body["bbox"] + [request_body["srid"]]
                 zoom = request_body.get("zoom", None)
             except MultiValueDictKeyError:
@@ -699,7 +704,11 @@ class ResourceBaseViewSet(ApiPresetsInitializer, DynamicModelViewSet, Advertised
                 zoom = request_body.get("zoom", None)
 
             thumbnail_url = create_thumbnail(
-                resource.get_real_instance(), bbox=bbox, background_zoom=zoom, overwrite=True
+                resource.get_real_instance(),
+                bbox=bbox,
+                background_zoom=zoom,
+                overwrite=True,
+                map_thumb_from_bbox=map_thumb_from_bbox,
             )
             return Response(
                 {"message": "Thumbnail correctly created.", "success": True, "thumbnail_url": thumbnail_url}, status=200
@@ -724,107 +733,6 @@ class ResourceBaseViewSet(ApiPresetsInitializer, DynamicModelViewSet, Advertised
             traceback.print_exc()
             logger.error(e)
             return Response(data={"message": e.args[0], "success": False}, status=500, exception=True)
-
-    @extend_schema(
-        methods=["post"], responses={200}, description="Instructs the Async dispatcher to execute a 'INGEST' operation."
-    )
-    @action(
-        detail=False,
-        url_path="ingest/(?P<resource_type>\w+)",  # noqa
-        url_name="resource-service-ingest",
-        methods=["post"],
-        permission_classes=[IsAuthenticated],
-    )
-    def resource_service_ingest(self, request, resource_type: str = None, *args, **kwargs):
-        """Instructs the Async dispatcher to execute a 'INGEST' operation
-
-        - POST input_params: {
-            uuid: "<str: UUID>",
-            files: "<list(str) path>",
-            defaults: "{\"owner\":\"<str: username>\",<list: str>}",  # WARNING: 'owner' is mandatory
-            resource_type: "<enum: ['dataset', 'document', 'map', '<GeoApp: name>']>"
-        }
-
-        - output_params: {
-            output: <int: number of resources deleted / 0 if none>
-        }
-
-        - output: {
-                "status": "ready",
-                "execution_id": "<str: execution ID>",
-                "status_url": "http://localhost:8000/api/v2/resource-service/execution-status/<str: execution ID>"
-            }
-
-        Sample Request:
-
-        1. curl -v -X POST -u admin:admin -H "Content-Type: application/json" -d 'defaults={"owner":"admin","title":"pippo"}' -d 'files=["/mnt/c/Data/flowers.jpg"]'
-            http://localhost:8000/api/v2/resources/ingest/document
-            OUTPUT: {
-                "status": "ready",
-                "execution_id": "90ca670d-df60-44b6-b358-d792c6aecc58",
-                "status_url": "http://localhost:8000/api/v2/resource-service/execution-status/90ca670d-df60-44b6-b358-d792c6aecc58"
-            }
-
-        2. curl -v -X GET -u admin:admin http://localhost:8000/api/v2/resource-service/execution-status/90ca670d-df60-44b6-b358-d792c6aecc58
-            OUTPUT: {
-                "user": "admin",
-                "status": "finished",
-                "func_name": "create",
-                "created": "2021-07-22T15:32:09.096075Z",
-                "finished": "2021-07-22T15:32:26.936683Z",
-                "last_updated": "2021-07-22T15:32:09.096129Z",
-                "input_params": {
-                    "uuid": "fa404f64-eb01-11eb-8f91-00155d41f2fb",
-                    "files": "[\"/mnt/c/Data/flowers.jpg\"]",
-                    "defaults": "{\"owner\":\"admin\",\"title\":\"pippo\"}",
-                    "resource_type": "dataset"
-                },
-                "output_params": {
-                    "output": {
-                        "uuid": "fa404f64-eb01-11eb-8f91-00155d41f2fb"
-                    }
-                }
-            }
-        """
-        config = Configuration.load()
-        if (
-            config.read_only
-            or config.maintenance
-            or request.user.is_anonymous
-            or not request.user.is_authenticated
-            or not request.user.has_perm("base.add_resourcebase")
-        ):
-            return Response(status=status.HTTP_403_FORBIDDEN)
-        try:
-            request_params = self._get_request_params(request)
-            uuid = request_params.get("uuid", str(uuid4()))
-            resource_filter = ResourceBase.objects.filter(uuid=uuid)
-            _exec_request = ExecutionRequest.objects.create(
-                user=request.user,
-                func_name="ingest",
-                geonode_resource=resource_filter.get() if resource_filter.exists() else None,
-                action="ingest",
-                input_params={
-                    "uuid": uuid,
-                    "files": request_params.get("files", "[]"),
-                    "resource_type": resource_type,
-                    "defaults": request_params.get("defaults", f'{{"owner":"{request.user.username}"}}'),
-                },
-            )
-            resouce_service_dispatcher.apply_async(args=(str(_exec_request.exec_id),), expiration=30)
-            return Response(
-                {
-                    "status": _exec_request.status,
-                    "execution_id": _exec_request.exec_id,
-                    "status_url": urljoin(
-                        settings.SITEURL, reverse("rs-execution-status", kwargs={"execution_id": _exec_request.exec_id})
-                    ),
-                },
-                status=status.HTTP_200_OK,
-            )
-        except Exception as e:
-            logger.exception(e)
-            return Response(status=status.HTTP_400_BAD_REQUEST, exception=e)
 
     @extend_schema(
         methods=["post"], responses={200}, description="Instructs the Async dispatcher to execute a 'CREATE' operation."
