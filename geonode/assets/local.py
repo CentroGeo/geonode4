@@ -4,9 +4,8 @@ import os
 import shutil
 
 from django.conf import settings
-from django.http import HttpResponse, StreamingHttpResponse
+from django.http import HttpResponse, StreamingHttpResponse, FileResponse
 from django.urls import reverse
-from django_downloadview import DownloadResponse
 from zipstream import ZipStream
 
 from geonode.assets.handlers import asset_handler_registry, AssetHandlerInterface, AssetDownloadHandlerInterface
@@ -274,8 +273,8 @@ class LocalAssetDownloadHandler(AssetDownloadHandlerInterface):
                     )
                 case False:
                     logger.info(f"Returning file '{localfile}' with name '{outname}'")
-                    return DownloadResponse(
-                        _asset_storage_manager.open(localfile).file, basename=f"{outname}", attachment=False
+                    return FileResponse(
+                        _asset_storage_manager.open(localfile).file, as_attachment=False, filename=f"{outname}"
                     )
         else:
             logger.warning(f"Internal file {localfile} not found for asset {asset.id}")
