@@ -425,7 +425,6 @@ def set_dataset_style(saved_dataset, title, sld, base_file=None):
             _sld_format = _extract_style_version_from_sld(sld)
             style = gs_catalog.create_style(
                 f'{saved_dataset.name}_{secrets.token_hex(nbytes=2)}',
-                saved_dataset.name,
                 sld,
                 overwrite=False,
                 raw=True,
