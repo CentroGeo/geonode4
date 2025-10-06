@@ -463,7 +463,7 @@ class Thesaurus(models.Model):
     # read from the RDF file
     description = models.TextField(max_length=255, default="")
 
-    slug = models.CharField(max_length=64, default="")
+    slug = models.CharField(max_length=64, default="", null=True, blank=True)
 
     about = models.CharField(max_length=255, null=True, blank=True)
 
@@ -1237,7 +1237,7 @@ class ResourceBase(PolymorphicModel, PermissionLevelMixin, ItemBase):
             "regions",
             "title",
         ]
-        if self.restriction_code_type == "otherRestrictions":
+        if self.restriction_code_type and self.restriction_code_type.identifier == "otherRestrictions":
             required_fields.append("constraints_other")
         filled_fields = []
         for required_field in required_fields:
@@ -1567,7 +1567,7 @@ class ResourceBase(PolymorphicModel, PermissionLevelMixin, ItemBase):
 
                     with open(tmp_location, "rb+") as img:
                         # Saving the img via storage manager
-                        storage_manager.save(storage_manager.path(upload_path), img)
+                        storage_manager.save(upload_path, img)
 
                     # If we use a remote storage, the local img is deleted
                     if tmp_location != storage_manager.path(upload_path):
