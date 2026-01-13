@@ -493,6 +493,7 @@ INSTALLED_APPS = (
     "django_user_agents",
     # REST APIs
     "rest_framework",
+    "rest_framework.authtoken",
     "rest_framework_gis",
     "dynamic_rest",
     "drf_spectacular",
@@ -546,6 +547,7 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.BasicAuthentication",
         "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
         "rest_framework.authentication.SessionAuthentication",
+        "geonode.api.custom_auth.GeonodeTokenAuthentication",
     ],
     "DEFAULT_RENDERER_CLASSES": [
         "rest_framework.renderers.JSONRenderer",
