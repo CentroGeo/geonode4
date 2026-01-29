@@ -131,7 +131,7 @@ services:
   # PostGIS database.
   db:
     # use geonode official postgis 15 image
-    image: geonode/postgis:15.3.5-v1
+    image: geonode/postgis:15-3.5-v1
     build:
       context: ./docker/postgresql
       dockerfile: Dockerfile
